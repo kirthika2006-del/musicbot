@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ bot_name }} | Music Learning Assistant</title>
+
+<!-- ============================= CSS ============================= -->
+<style>
+  :root{
+    --bg-1:#0d0a14;
+    --bg-2:#120e1c;
+    --panel:#171224;
+    --panel-2:#1e1830;
+    --border:#2c2444;
+    --accent:#a855f7;
+    --accent-2:#ec4899;
+    --accent-glow: rgba(168,85,247,0.35);
+    --text-1:#f4eefc;
+    --text-2:#a496c2;
+    --success:#22c55e;
+    --danger:#f87171;
+    --radius:16px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(168,85,247,0.16), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(236,72,153,0.12), transparent 40%),
+      var(--bg-1);
+    color:var(--text-1);
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .app{
+    width:100%;
+    max-width:920px;
+    height:92vh;
+    max-height:880px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:22px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+  }
+
+  /* -------- Header -------- */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 24px;
+    background:linear-gradient(90deg, var(--panel-2), var(--panel));
+    border-bottom:1px solid var(--border);
+  }
+
+  .header-left{ display:flex; align-items:center; gap:14px; }
+
+  .logo{
+    width:46px; height:46px;
+    border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+    box-shadow: 0 0 22px var(--accent-glow);
+  }
+
+  .title h1{
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  .title h1 span{
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .title p{
+    font-size:12px;
+    color:var(--text-2);
+    margin-top:2px;
+  }
+
+  .status{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; color:var(--text-2);
+    background:rgba(34,197,94,0.08);
+    border:1px solid rgba(34,197,94,0.25);
+    padding:6px 12px;
+    border-radius:999px;
+  }
+  .status .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--success);
+    box-shadow:0 0 8px var(--success);
+    animation:pulse 1.8s infinite;
+  }
+  @keyframes pulse{
+    0%{ opacity:1; } 50%{ opacity:.4; } 100%{ opacity:1; }
+  }
+
+  /* -------- Chat area -------- */
+  .chat{
+    flex:1;
+    overflow-y:auto;
+    padding:26px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .chat::-webkit-scrollbar{ width:8px; }
+  .chat::-webkit-scrollbar-thumb{ background:#271f3d; border-radius:8px; }
+
+  .msg{
+    display:flex;
+    gap:12px;
+    max-width:85%;
+    animation:fadeIn .25s ease;
+  }
+  @keyframes fadeIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .msg.bot{ align-self:flex-start; }
+  .msg.user{ align-self:flex-end; flex-direction:row-reverse; }
+
+  .avatar{
+    flex-shrink:0;
+    width:34px; height:34px;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+  }
+  .msg.bot .avatar{
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow:0 0 14px var(--accent-glow);
+  }
+  .msg.user .avatar{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+  }
+
+  .bubble{
+    padding:13px 16px;
+    border-radius:var(--radius);
+    font-size:14.5px;
+    line-height:1.55;
+    white-space:pre-wrap;
+  }
+  .msg.bot .bubble{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-top-left-radius:4px;
+  }
+  .msg.user .bubble{
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    color:white;
+    border-top-right-radius:4px;
+  }
+
+  .bubble img{
+    max-width:220px;
+    border-radius:10px;
+    margin-top:8px;
+    display:block;
+  }
+
+  .msg-time{
+    font-size:10.5px;
+    color:var(--text-2);
+    margin-top:6px;
+    display:block;
+  }
+
+  /* -------- Suggestions -------- */
+  .suggestions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:0 24px 18px;
+  }
+  .chip{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    padding:9px 14px;
+    border-radius:999px;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .chip:hover{
+    border-color:var(--accent);
+    color:var(--text-1);
+    box-shadow:0 0 12px var(--accent-glow);
+  }
+
+  /* -------- typing indicator -------- */
+  .typing{
+    display:flex; gap:5px; padding:6px 0;
+  }
+  .typing span{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--text-2);
+    animation:bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2){ animation-delay:.15s; }
+  .typing span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{
+    0%,60%,100%{ transform:translateY(0); opacity:.5; }
+    30%{ transform:translateY(-5px); opacity:1; }
+  }
+
+  /* -------- Input bar -------- */
+  .input-bar{
+    padding:16px 20px 20px;
+    border-top:1px solid var(--border);
+    background:var(--panel);
+  }
+
+  .image-preview{
+    display:none;
+    align-items:center;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:8px 12px;
+    border-radius:12px;
+    margin-bottom:10px;
+    font-size:12.5px;
+    color:var(--text-2);
+    width:fit-content;
+  }
+  .image-preview img{
+    width:38px; height:38px;
+    object-fit:cover;
+    border-radius:8px;
+  }
+  .image-preview .remove-img{
+    cursor:pointer;
+    color:var(--danger);
+    font-weight:700;
+    padding:0 4px;
+  }
+
+  .input-row{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:8px 8px 8px 14px;
+    transition:.2s;
+  }
+  .input-row:focus-within{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-glow);
+  }
+
+  #messageInput{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    resize:none;
+    color:var(--text-1);
+    font-size:14.5px;
+    font-family:inherit;
+    max-height:120px;
+    padding:8px 0;
+  }
+  #messageInput::placeholder{ color:var(--text-2); }
+
+  .icon-btn{
+    width:40px; height:40px;
+    border-radius:12px;
+    border:none;
+    background:transparent;
+    color:var(--text-2);
+    font-size:18px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:.2s;
+    flex-shrink:0;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,0.06); color:var(--text-1); }
+
+  .send-btn{
+    width:42px; height:42px;
+    border-radius:12px;
+    border:none;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    color:white;
+    font-size:17px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 16px var(--accent-glow);
+    transition:.2s;
+    flex-shrink:0;
+  }
+  .send-btn:hover{ transform:translateY(-1px); }
+  .send-btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+  .footnote{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-2);
+    margin-top:10px;
+  }
+
+  @media (max-width:600px){
+    .app{ height:100vh; border-radius:0; max-height:none; }
+    body{ padding:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">🎵</div>
+      <div class="title">
+        <h1>{{ bot_name.split(" ")[0] }} <span>{{ bot_name.split(" ")[1] if bot_name.split(" ")|length > 1 else "AI" }}</span></h1>
+        <p>Your Personal Music Learning Assistant</p>
+      </div>
+    </div>
+    <div class="status"><span class="dot"></span> Online</div>
+  </div>
+
+  <!-- Chat messages -->
+  <div class="chat" id="chatWindow">
+    <div class="msg bot">
+      <div class="avatar">🎶</div>
+      <div>
+        <div class="bubble">
+          Hi! I'm <strong>{{ bot_name }}</strong> 👋<br>
+          I can help you learn music theory, practice an instrument, work
+          on your vocal technique, and understand sheet music. You can
+          also upload a photo of sheet music, a chord chart, or a
+          keyboard diagram and I'll help explain it.
+        </div>
+        <span class="msg-time">Just now</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick suggestions -->
+  <div class="suggestions" id="suggestions">
+    <div class="chip" onclick="fillMessage('Explain major and minor scales in simple terms.')">🎼 Major vs minor scales</div>
+    <div class="chip" onclick="fillMessage('Give me a beginner practice routine for guitar.')">🎸 Guitar practice routine</div>
+    <div class="chip" onclick="fillMessage('How do I read notes on a piano sheet music staff?')">🎹 Reading sheet music</div>
+    <div class="chip" onclick="fillMessage('Give me some vocal warm-up exercises for beginners.')">🎤 Vocal warm-ups</div>
+  </div>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <div class="image-preview" id="imagePreview">
+      <img id="previewImg" src="" alt="preview">
+      <span id="previewName">image.png</span>
+      <span class="remove-img" onclick="removeImage()">✕</span>
+    </div>
+
+    <div class="input-row">
+      <button class="icon-btn" title="Attach image" onclick="document.getElementById('fileInput').click()">📎</button>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+      <textarea id="messageInput" rows="1" placeholder="Ask me anything about learning music..."></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="footnote">{{ bot_name }} only answers music learning related questions.</div>
+  </div>
+
+</div>
+
+<!-- ============================= JS ============================= -->
+<script>
+  const chatWindow   = document.getElementById('chatWindow');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn      = document.getElementById('sendBtn');
+  const fileInput    = document.getElementById('fileInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewImg   = document.getElementById('previewImg');
+  const previewName  = document.getElementById('previewName');
+  const suggestions  = document.getElementById('suggestions');
+
+  let selectedImageDataUrl = null;
+
+  // Auto-resize textarea
+  messageInput.addEventListener('input', () => {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+  });
+
+  // Send on Enter (Shift+Enter = new line)
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function fillMessage(text) {
+    messageInput.value = text;
+    messageInput.focus();
+  }
+
+  function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      selectedImageDataUrl = e.target.result;
+      previewImg.src = selectedImageDataUrl;
+      previewName.textContent = file.name;
+      imagePreview.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage() {
+    selectedImageDataUrl = null;
+    fileInput.value = '';
+    imagePreview.style.display = 'none';
+  }
+
+  function scrollToBottom() {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function currentTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function appendMessage(sender, text, imageUrl = null) {
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + sender;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = sender === 'bot' ? '🎶' : '🙂';
+
+    const wrapper = document.createElement('div');
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text || '';
+
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      bubble.appendChild(img);
+    }
+
+    const time = document.createElement('span');
+    time.className = 'msg-time';
+    time.textContent = currentTime();
+
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(time);
+    msg.appendChild(avatar);
+    msg.appendChild(wrapper);
+    chatWindow.appendChild(msg);
+    scrollToBottom();
+    return msg;
+  }
+
+  function showTypingIndicator() {
+    const msg = document.createElement('div');
+    msg.className = 'msg bot';
+    msg.id = 'typingIndicator';
+    msg.innerHTML = `
+      <div class="avatar">🎶</div>
+      <div class="bubble">
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>`;
+    chatWindow.appendChild(msg);
+    scrollToBottom();
+  }
+
+  function removeTypingIndicator() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    const text = messageInput.value.trim();
+    const imageToSend = selectedImageDataUrl;
+
+    if (!text && !imageToSend) return;
+
+    // Hide suggestions after first message
+    suggestions.style.display = 'none';
+
+    appendMessage('user', text, imageToSend);
+
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    removeImage();
+    sendBtn.disabled = true;
+
+    showTypingIndicator();
+
+    try {
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, image: imageToSend })
+      });
+
+      const data = await response.json();
+      removeTypingIndicator();
+      appendMessage('bot', data.reply);
+    } catch (err) {
+      removeTypingIndicator();
+      appendMessage('bot', 'Sorry, I ran into a connection problem. Please try again.');
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
